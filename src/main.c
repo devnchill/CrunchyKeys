@@ -1,3 +1,4 @@
+#include "./include/keymap.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <libinput.h>
@@ -47,25 +48,22 @@ int main(void) {
   while (1) {
     libinput_dispatch(context);
     struct libinput_event *event;
-
     while ((event = libinput_get_event(context))) {
       enum libinput_event_type type = libinput_event_get_type(event);
-
       if (type == LIBINPUT_EVENT_KEYBOARD_KEY) {
         struct libinput_event_keyboard *kb_event =
             libinput_event_get_keyboard_event(event);
         uint32_t key = libinput_event_keyboard_get_key(kb_event);
         uint32_t state = libinput_event_keyboard_get_key_state(kb_event);
-
-        printf("Key %d \n", key);
+        if (state == LIBINPUT_KEY_STATE_PRESSED) {
+          char *key_name = get_key_name(key);
+          printf("%s is the key name\n", key_name);
+        }
       }
-
       libinput_event_destroy(event);
     }
   }
-
   libinput_unref(context);
   udev_unref(udev);
-
   return 0;
 }
