@@ -14,7 +14,7 @@ TARGET := $(BUILD_DIR)/crunchykeys
 
 # Compilation Flags
 CFLAGS := -Wall -Wextra -Wpedantic -I$(INCLUDE_DIR)
-LDFLAGS := -linput -ludev
+LDFLAGS := -linput -ludev -lasound
 
 # Build Rules
 $(TARGET): $(OBJS)
