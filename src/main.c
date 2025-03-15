@@ -1,4 +1,5 @@
 #include "./include/keymap.h"
+#include "include/audio.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <libinput.h>
@@ -56,6 +57,7 @@ int main(void) {
         uint32_t key = libinput_event_keyboard_get_key(kb_event);
         uint32_t state = libinput_event_keyboard_get_key_state(kb_event);
         if (state == LIBINPUT_KEY_STATE_PRESSED) {
+          play_beep();
           char *key_name = get_key_name(key);
           printf("%s is the key name\n", key_name);
         }
