@@ -1,4 +1,5 @@
 #include "./include/keymap.h"
+#include "include/audio.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <libinput.h>
@@ -46,6 +47,7 @@ int main(void) {
   printf("Monitoring keyboard events...\n");
 
   while (1) {
+    play_beep();
     libinput_dispatch(context);
     struct libinput_event *event;
     while ((event = libinput_get_event(context))) {

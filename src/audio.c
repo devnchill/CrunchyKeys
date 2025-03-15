@@ -20,7 +20,7 @@ int check_error(int err, snd_pcm_t *_soundDevice) {
   return 0;
 }
 
-int main() {
+int play_beep() {
   snd_pcm_t *_soundDevice;
   snd_pcm_hw_params_t *hw_params;
   int err;
