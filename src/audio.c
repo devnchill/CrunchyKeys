@@ -1,11 +1,8 @@
 #include <alsa/asoundlib.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define SAMPLE_RATE 44100
-#define FREQUENCY 440
-#define DURATION 0.03
 
 static snd_pcm_t *_soundDevice = NULL;
 
@@ -24,6 +21,9 @@ int init_audio() {
   }
   snd_pcm_hw_params_t *hw_params;
   int err;
+  snd_pcm_uframes_t buffer_size = 4096;
+  snd_pcm_uframes_t period_size = 1024;
+
   if (check_error(
           snd_pcm_open(&_soundDevice, "default", SND_PCM_STREAM_PLAYBACK, 0))) {
     return 1;
@@ -49,13 +49,27 @@ int init_audio() {
                                                   &sample_rate, &dir))) {
     return 1;
   }
+
+  if (check_error(snd_pcm_hw_params_set_buffer_size_near(
+          _soundDevice, hw_params, &buffer_size))) {
+    return 1;
+  }
+
+  if (check_error(snd_pcm_hw_params_set_period_size_near(
+          _soundDevice, hw_params, &period_size, 0))) {
+    return 1;
+  }
   if (check_error(snd_pcm_hw_params_set_channels(_soundDevice, hw_params, 2))) {
     return 1;
   }
+
   if (check_error(snd_pcm_hw_params(_soundDevice, hw_params))) {
     return 1;
   }
   snd_pcm_hw_params_free(hw_params);
+  if (check_error(snd_pcm_prepare(_soundDevice))) {
+    return 1;
+  }
   return 0;
 }
 
@@ -65,32 +79,35 @@ void close_audio() {
     _soundDevice = NULL;
   }
 }
-int play_beep() {
+int play_wav(const char *filename) {
   if (!_soundDevice) {
     if (init_audio())
       return 1;
   }
   snd_pcm_drop(_soundDevice);
   snd_pcm_prepare(_soundDevice);
-
-  // Generate sine wave buffer
-  snd_pcm_uframes_t frames = SAMPLE_RATE * DURATION;
-  int16_t *buffer = malloc(frames * 2 * sizeof(int16_t));
-  if (!buffer) {
-    fprintf(stderr, "Failed to allocate buffer\n");
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    fprintf(stderr, "Failed to open WAV file: %s\n", filename);
     return 1;
   }
 
-  for (snd_pcm_uframes_t i = 0; i < frames; i++) {
-    int16_t sample = 32767 * sin(2.0 * M_PI * FREQUENCY * i / SAMPLE_RATE);
-    buffer[i * 2] = sample;
-    buffer[i * 2 + 1] = sample;
+  fseek(file, 44, SEEK_SET);
+  int16_t buffer[1024];
+  size_t read_samples;
+  while ((read_samples = fread(buffer, sizeof(int16_t), 1024, file)) > 0) {
+    int err;
+    if ((err = snd_pcm_writei(_soundDevice, buffer, read_samples / 2)) < 0) {
+      if (err == -EPIPE) { // Buffer underrun (xruns)
+        fprintf(stderr, "Buffer underrun detected! Recovering...\n");
+        snd_pcm_prepare(_soundDevice); // Recover
+      } else {
+        fprintf(stderr, "ALSA write error: %s\n", snd_strerror(err));
+        fclose(file);
+        return 1;
+      }
+    }
   }
-  if (check_error(snd_pcm_writei(_soundDevice, buffer, frames))) {
-    free(buffer);
-    return 1;
-  }
-
-  free(buffer);
+  fclose(file);
   return 0;
 }
