@@ -65,6 +65,8 @@ int main(void) {
       libinput_event_destroy(event);
     }
   }
+
+  close_audio();
   libinput_unref(context);
   udev_unref(udev);
   return 0;
