@@ -6,7 +6,7 @@
 
 #define SAMPLE_RATE 44100
 #define FREQUENCY 440
-#define DURATION 1
+#define DURATION 0.1
 
 // Function to check and handle ALSA errors
 int check_error(int err, snd_pcm_t *_soundDevice) {
