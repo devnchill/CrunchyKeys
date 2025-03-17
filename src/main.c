@@ -4,9 +4,16 @@
 #include <fcntl.h>
 #include <libinput.h>
 #include <libudev.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+volatile sig_atomic_t running = 1;
+void sigint_handler(int sig_num) {
+  printf("\nCtrl c Pressed , Exiting Gracefully\n");
+  running = 0;
+}
 
 static int open_restricted(const char *path, int flags, void *user_data) {
   int fd = open(path, flags);
@@ -23,6 +30,7 @@ static const struct libinput_interface interface = {
 };
 
 int main(void) {
+  signal(SIGINT, sigint_handler);
   struct udev *udev = udev_new();
   if (!udev) {
     fprintf(stderr, "Failed to create udev context\n");
@@ -46,7 +54,7 @@ int main(void) {
 
   printf("Monitoring keyboard events...\n");
 
-  while (1) {
+  while (running) {
     libinput_dispatch(context);
     struct libinput_event *event;
     while ((event = libinput_get_event(context))) {
