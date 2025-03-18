@@ -22,6 +22,7 @@ int init_audio() {
     return 1;
   }
 
+  // get chunks to be played.
   sound = Mix_LoadWAV("./assets/s1.wav");
   if (!sound) {
     fprintf(stderr, "Failed to load WAV file: %s\n", Mix_GetError());
@@ -32,11 +33,13 @@ int init_audio() {
 
 void play_wav(const char *filename) {
   (void)filename;
+  //-1 is the channel in which the chunk gets played.
   Mix_PlayChannel(-1, sound, 0);
 }
 
 void close_audio() {
   if (sound) {
+    // if music is already playing , would stop thi.
     Mix_FreeChunk(sound);
     sound = NULL;
   }
