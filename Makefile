@@ -14,7 +14,7 @@ TARGET := $(BUILD_DIR)/crunchykeys
 
 # Compilation Flags
 CFLAGS := -Wall -Wextra -Wpedantic -I$(INCLUDE_DIR)
-LDFLAGS := -linput -ludev -lasound -lm 
+LDFLAGS := `pkg-config --libs --cflags sdl2 SDL2_mixer` -linput -ludev
 
 # Build Rules
 $(TARGET): $(OBJS)
